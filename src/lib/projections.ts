@@ -50,6 +50,12 @@ export function averageMonthlyByCategory(transactions: Transaction[], monthsBack
   return totals
 }
 
+/** Percentage change of `current` vs `previous`, or null when there's no previous value to compare against. */
+export function monthOverMonthDelta(current: number, previous: number): number | null {
+  if (previous === 0) return null
+  return ((current - previous) / Math.abs(previous)) * 100
+}
+
 export function averageMonthlyIncomeExpense(transactions: Transaction[], monthsBack = 3) {
   const months = summarizeByMonth(transactions).slice(-monthsBack)
   const denom = Math.max(1, months.length)

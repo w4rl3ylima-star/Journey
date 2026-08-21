@@ -13,6 +13,8 @@ export type CategoryId =
 export interface CategoryMeta {
   id: CategoryId
   label: string
+  /** Short form for tight spaces like chart column tags. */
+  short: string
   emoji: string
   /** Fixed categorical hue, light/dark — assigned by identity, not by rank, so it never repaints. */
   colorLight: string
@@ -32,6 +34,7 @@ export const CATEGORIES: CategoryMeta[] = [
   {
     id: 'alimentacao',
     label: 'Alimentação',
+    short: 'Alimen.',
     emoji: '🍽️',
     colorLight: '#2a78d6',
     colorDark: '#3987e5',
@@ -44,6 +47,7 @@ export const CATEGORIES: CategoryMeta[] = [
   {
     id: 'transporte',
     label: 'Transporte',
+    short: 'Transporte',
     emoji: '🚗',
     colorLight: '#eb6834',
     colorDark: '#d95926',
@@ -53,6 +57,7 @@ export const CATEGORIES: CategoryMeta[] = [
   {
     id: 'moradia',
     label: 'Moradia',
+    short: 'Moradia',
     emoji: '🏠',
     colorLight: '#1baf7a',
     colorDark: '#199e70',
@@ -62,6 +67,7 @@ export const CATEGORIES: CategoryMeta[] = [
   {
     id: 'contas',
     label: 'Contas e Serviços',
+    short: 'Contas',
     emoji: '🧾',
     colorLight: '#eda100',
     colorDark: '#c98500',
@@ -71,6 +77,7 @@ export const CATEGORIES: CategoryMeta[] = [
   {
     id: 'lazer',
     label: 'Lazer',
+    short: 'Lazer',
     emoji: '🎉',
     colorLight: '#e87ba4',
     colorDark: '#d55181',
@@ -80,6 +87,7 @@ export const CATEGORIES: CategoryMeta[] = [
   {
     id: 'compras',
     label: 'Compras',
+    short: 'Compras',
     emoji: '🛍️',
     colorLight: '#008300',
     colorDark: '#008300',
@@ -89,6 +97,7 @@ export const CATEGORIES: CategoryMeta[] = [
   {
     id: 'assinaturas',
     label: 'Assinaturas',
+    short: 'Assinat.',
     emoji: '📱',
     colorLight: '#4a3aa7',
     colorDark: '#9085e9',
@@ -98,6 +107,7 @@ export const CATEGORIES: CategoryMeta[] = [
   {
     id: 'saude',
     label: 'Saúde',
+    short: 'Saúde',
     emoji: '💊',
     colorLight: '#e34948',
     colorDark: '#e66767',
@@ -107,6 +117,7 @@ export const CATEGORIES: CategoryMeta[] = [
   {
     id: 'educacao',
     label: 'Educação',
+    short: 'Educação',
     emoji: '📚',
     colorLight: NEUTRAL_LIGHT,
     colorDark: NEUTRAL_DARK,
@@ -116,6 +127,7 @@ export const CATEGORIES: CategoryMeta[] = [
   {
     id: 'outros',
     label: 'Outros',
+    short: 'Outros',
     emoji: '✨',
     colorLight: NEUTRAL_LIGHT,
     colorDark: NEUTRAL_DARK,

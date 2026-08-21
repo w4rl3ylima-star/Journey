@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Transaction, Goal } from '../lib/types'
-import { summarizeByMonth, projectForward, computeGoalProgress } from '../lib/projections'
+import { summarizeByMonth, projectForward, computeGoalProgress, monthOverMonthDelta } from '../lib/projections'
 import { formatCurrency, formatMonthLabel, currentMonthKey, addMonthsToKey } from '../lib/format'
 import { CategoryBarChart } from './CategoryBarChart'
 import { TrendChart } from './TrendChart'
@@ -23,6 +23,7 @@ export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) 
     net: 0,
     byCategory: {},
   }
+  const previous = months.find((m) => m.key === addMonthsToKey(selectedKey, -1))
 
   const projected = useMemo(() => projectForward(transactions, 3), [transactions])
   const history = months.slice(-6)
@@ -32,55 +33,76 @@ export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) 
   const canGoBack = selectedKey > earliestKey
   const canGoForward = selectedKey < currentMonthKey()
 
+  const netDelta = previous ? monthOverMonthDelta(selected.net, previous.net) : null
+  const incomeDelta = previous ? monthOverMonthDelta(selected.income, previous.income) : null
+  const expenseDelta = previous ? monthOverMonthDelta(selected.expense, previous.expense) : null
+
   return (
-    <div className="flex flex-col gap-6 px-5 py-5">
+    <div className="flex flex-col gap-5 px-5 py-5">
       <header className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-neutral-400">Olá 👋</p>
-          <h1 className="text-xl font-semibold text-neutral-900 dark:text-white">Seu resumo</h1>
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Olá 👋</p>
+          <h1 className="text-2xl font-black uppercase tracking-tight text-neutral-900 dark:text-white">Seu resumo</h1>
         </div>
-        <div className="flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-1 dark:bg-white/5">
+        <div className="flex items-center gap-1 rounded-full bg-neutral-900 px-2 py-1 text-white dark:bg-white dark:text-neutral-900">
           <button
             type="button"
             disabled={!canGoBack}
             onClick={() => setSelectedKey((k) => addMonthsToKey(k, -1))}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-neutral-500 disabled:opacity-20"
+            aria-label="Mês anterior"
+            className="flex h-7 w-7 items-center justify-center rounded-full disabled:opacity-30"
           >
             ‹
           </button>
-          <span className="min-w-[64px] text-center text-sm font-medium text-neutral-700 dark:text-neutral-200">
-            {formatMonthLabel(selectedKey)}
-          </span>
+          <span className="min-w-[64px] text-center text-sm font-semibold">{formatMonthLabel(selectedKey)}</span>
           <button
             type="button"
             disabled={!canGoForward}
             onClick={() => setSelectedKey((k) => addMonthsToKey(k, 1))}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-neutral-500 disabled:opacity-20"
+            aria-label="Próximo mês"
+            className="flex h-7 w-7 items-center justify-center rounded-full disabled:opacity-30"
           >
             ›
           </button>
         </div>
       </header>
 
-      <div className="grid grid-cols-3 gap-3">
-        <StatTile label="Receita" value={selected.income} tone="income" />
-        <StatTile label="Despesa" value={selected.expense} tone="expense" />
-        <StatTile label="Saldo" value={selected.net} tone={selected.net >= 0 ? 'income' : 'expense'} />
-      </div>
+      <section className="rounded-3xl bg-neutral-900 p-5 text-white dark:bg-black">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wide text-white/50">Saldo do mês</p>
+          <DeltaBadge value={netDelta} />
+        </div>
+        <p className="mt-1 text-4xl font-black tabular-nums tracking-tight">{formatCurrency(selected.net)}</p>
 
-      <section className="rounded-3xl border border-black/5 bg-white p-4 dark:border-white/5 dark:bg-[#141413]">
-        <h2 className="mb-3 text-sm font-semibold text-neutral-700 dark:text-neutral-200">Gastos por categoria</h2>
+        <div className="mt-5 flex gap-3">
+          <MiniStat label="Receita" value={selected.income} delta={incomeDelta} dotClassName="bg-emerald-400" />
+          <MiniStat label="Despesa" value={selected.expense} delta={expenseDelta} dotClassName="bg-rose-400" invertDeltaTone />
+        </div>
+      </section>
+
+      <section className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-black/5 dark:bg-[#141413] dark:ring-white/5">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Gastos por categoria</h2>
+          <span className="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-medium text-neutral-500 dark:bg-white/5 dark:text-neutral-400">
+            % da renda
+          </span>
+        </div>
         <CategoryBarChart byCategory={selected.byCategory} income={selected.income} />
       </section>
 
-      <section className="rounded-3xl border border-black/5 bg-white p-4 dark:border-white/5 dark:bg-[#141413]">
-        <h2 className="mb-1 text-sm font-semibold text-neutral-700 dark:text-neutral-200">Receita x Despesa e projeção</h2>
+      <section className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-black/5 dark:bg-[#141413] dark:ring-white/5">
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Receita x Despesa</h2>
+          <span className="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-medium text-neutral-500 dark:bg-white/5 dark:text-neutral-400">
+            + projeção
+          </span>
+        </div>
         <p className="mb-2 text-xs text-neutral-400">Últimos meses e os próximos 3, projetados pela sua média recente.</p>
         <TrendChart history={history} projected={projected} />
       </section>
 
       {topGoals.length > 0 && (
-        <section className="rounded-3xl border border-black/5 bg-white p-4 dark:border-white/5 dark:bg-[#141413]">
+        <section className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-black/5 dark:bg-[#141413] dark:ring-white/5">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Suas metas</h2>
             <button type="button" onClick={onViewGoals} className="text-xs font-medium text-teal-600 dark:text-teal-400">
@@ -94,9 +116,9 @@ export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) 
                   <span className="font-medium text-neutral-700 dark:text-neutral-200">
                     {g.goal.emoji} {g.goal.name}
                   </span>
-                  <span className="text-neutral-400">{g.progressPct.toFixed(0)}%</span>
+                  <span className="font-bold text-neutral-400">{g.progressPct.toFixed(0)}%</span>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-white/10">
+                <div className="h-3 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-white/10">
                   <div className="h-full rounded-full bg-teal-500" style={{ width: `${g.progressPct}%` }} />
                 </div>
               </div>
@@ -108,12 +130,43 @@ export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) 
   )
 }
 
-function StatTile({ label, value, tone }: { label: string; value: number; tone: 'income' | 'expense' }) {
-  const color = tone === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+function DeltaBadge({ value, invertTone = false }: { value: number | null; invertTone?: boolean }) {
+  if (value === null) return null
+  const isUp = value >= 0
+  const isGood = invertTone ? !isUp : isUp
   return (
-    <div className="rounded-2xl border border-black/5 bg-white p-3 dark:border-white/5 dark:bg-[#141413]">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-400">{label}</p>
-      <p className={`mt-1 text-sm font-semibold tabular-nums ${color}`}>{formatCurrency(value)}</p>
+    <span
+      className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${
+        isGood ? 'bg-emerald-400 text-emerald-950' : 'bg-rose-400 text-rose-950'
+      }`}
+    >
+      {isUp ? '+' : ''}
+      {value.toFixed(0)}%
+    </span>
+  )
+}
+
+function MiniStat({
+  label,
+  value,
+  delta,
+  dotClassName,
+  invertDeltaTone = false,
+}: {
+  label: string
+  value: number
+  delta: number | null
+  dotClassName: string
+  invertDeltaTone?: boolean
+}) {
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-1.5 rounded-2xl bg-white/10 px-3 py-2.5">
+      <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-white/60">
+        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dotClassName}`} />
+        {label}
+      </span>
+      <span className="truncate text-base font-bold tabular-nums">{formatCurrency(value)}</span>
+      <DeltaBadge value={delta} invertTone={invertDeltaTone} />
     </div>
   )
 }
