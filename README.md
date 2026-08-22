@@ -20,15 +20,29 @@ testar a versão de produção.
 
 ## Instalando no celular (PWA)
 
-1. Gere o build de produção e sirva os arquivos estáticos (`npm run build`,
-   pasta `dist/`) em algum host (Vercel, Netlify, GitHub Pages, etc.) — precisa
-   ser HTTPS para o microfone e a instalação funcionarem.
-2. Abra o link no celular:
+O jeito mais rápido é abrir a versão publicada no GitHub Pages (veja abaixo).
+Se preferir outro host (Vercel, Netlify...), gere o build com `npm run build`
+e sirva a pasta `dist/` — precisa ser HTTPS para o microfone e a instalação
+funcionarem.
+
+1. Abra o link no celular:
    - **Android (Chrome)**: menu ⋮ → "Adicionar à tela inicial" / vai aparecer
      um banner de instalação automático.
    - **iPhone (Safari)**: botão de compartilhar → "Adicionar à Tela de Início".
-3. O ícone abre em tela cheia, como um app nativo, e funciona offline depois
+2. O ícone abre em tela cheia, como um app nativo, e funciona offline depois
    do primeiro carregamento.
+
+## Deploy no GitHub Pages
+
+O repositório já tem um workflow (`.github/workflows/deploy-pages.yml`) que
+builda e publica a cada push nesta branch. Para ativar (uma vez só):
+
+1. No GitHub: **Settings → Pages → Build and deployment → Source** → escolha
+   **GitHub Actions**.
+2. Dê um push (ou re-rode o workflow na aba **Actions**) — em alguns minutos
+   o app fica em `https://w4rl3ylima-star.github.io/Journey/`.
+3. Abra esse link no celular para testar tudo, inclusive o microfone e a
+   instalação na tela inicial.
 
 ## Funcionalidades
 

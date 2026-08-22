@@ -3,8 +3,13 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Set GH_PAGES=true only in the GitHub Pages deploy workflow — the site is served from a
+// /<repo>/ subpath there, while every other target (local dev, Vercel, Netlify...) serves from '/'.
+const base = process.env.GH_PAGES ? '/Journey/' : '/'
+
 // https://vite.dev/config/
 export default defineConfig({
+  base,
   plugins: [
     react(),
     tailwindcss(),
@@ -19,8 +24,8 @@ export default defineConfig({
         background_color: '#0f172a',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
-        scope: '/',
+        start_url: base,
+        scope: base,
         lang: 'pt-BR',
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
