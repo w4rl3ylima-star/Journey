@@ -91,14 +91,9 @@ export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) 
       </section>
 
       <section className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-black/5 dark:bg-[#141413] dark:ring-white/5">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
-            {t('dashboard.byCategory', 'Gastos por categoria')}
-          </h2>
-          <span className="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-medium text-neutral-500 dark:bg-white/5 dark:text-neutral-400">
-            {t('dashboard.pctOfIncome', '% da renda')}
-          </span>
-        </div>
+        <h2 className="mb-3 text-sm font-semibold text-neutral-700 dark:text-neutral-200">
+          {t('dashboard.byCategory', 'Gastos por categoria')}
+        </h2>
         <CategoryBarChart byCategory={selected.byCategory} income={selected.income} />
       </section>
 

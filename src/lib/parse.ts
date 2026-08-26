@@ -82,6 +82,15 @@ export function extractAmount(rawText: string): number | null {
     if (whole || cents) return whole + cents / 100
   }
 
+  // "145 e 40" / "145 reais e 40" -> 145,40: voice input often says the decimal part joined by
+  // "e" instead of a comma (e.g. "cento e quarenta e cinco e quarenta").
+  const centsDigitMatch = normalized.match(/\b(\d+)(?:\s*reais?)?\s+e\s+(\d{1,2})\b(?!\d)(?!\s*reais?)/)
+  if (centsDigitMatch) {
+    const whole = Number(centsDigitMatch[1])
+    const cents = Number(centsDigitMatch[2])
+    if (!Number.isNaN(whole)) return whole + cents / 100
+  }
+
   // Numeric with decimals: R$ 1.234,50 / 45,50 / 45.50 / 3000
   const numericMatch = normalized.match(/(?:r\$\s*)?(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)/)
   if (numericMatch) {
