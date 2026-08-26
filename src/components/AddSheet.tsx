@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { CATEGORIES, type CategoryId } from '../lib/categories'
 import { parseEntry } from '../lib/parse'
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition'
@@ -33,27 +33,36 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
 
   const dirty = useRef({ amount: false, category: false, type: false, recurring: false, description: false })
 
+  // Re-parses `text` and applies every field the user hasn't manually edited since the last
+  // parse. Called directly (not only via the freeText effect below) so a final speech result
+  // is always re-applied even when it's textually identical to the last interim transcript —
+  // React skips the freeText state update (and thus that effect) when the value doesn't change.
+  const applyParse = useCallback((text: string) => {
+    if (!text.trim()) return
+    const parsed = parseEntry(text)
+    if (!dirty.current.amount && parsed.amount !== null) setAmount(String(parsed.amount))
+    if (!dirty.current.category) setCategoryId(parsed.categoryId)
+    if (!dirty.current.type) setType(parsed.type)
+    if (!dirty.current.recurring) setRecurring(parsed.recurring)
+    if (!dirty.current.description) setDescription(parsed.description)
+  }, [])
+
   useEffect(() => {
     if (speech.isListening) setFreeText(speech.transcript)
   }, [speech.transcript, speech.isListening])
 
   useEffect(() => {
     if (!speech.isListening && speech.transcript) {
-      setFreeText(speech.transcript)
       dirty.current = { amount: false, category: false, type: false, recurring: false, description: false }
+      setFreeText(speech.transcript)
+      applyParse(speech.transcript)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [speech.isListening])
 
   useEffect(() => {
-    if (!freeText.trim()) return
-    const parsed = parseEntry(freeText)
-    if (!dirty.current.amount && parsed.amount !== null) setAmount(String(parsed.amount))
-    if (!dirty.current.category) setCategoryId(parsed.categoryId)
-    if (!dirty.current.type) setType(parsed.type)
-    if (!dirty.current.recurring) setRecurring(parsed.recurring)
-    if (!dirty.current.description) setDescription(parsed.description)
-  }, [freeText])
+    applyParse(freeText)
+  }, [freeText, applyParse])
 
   const handleMicTap = () => {
     if (speech.isListening) {

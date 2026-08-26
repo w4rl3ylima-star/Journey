@@ -15,6 +15,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Registered manually in main.tsx via virtual:pwa-register so an update can force an
+      // immediate reload instead of just swapping the service worker in the background.
+      injectRegister: null,
       includeAssets: ['icons/favicon.svg'],
       manifest: {
         name: 'Journey — Controle de Gastos',

@@ -30,6 +30,9 @@ const HUNDREDS: Record<string, number> = {
 }
 const NUMBER_WORDS = new Set([...Object.keys(UNITS), ...Object.keys(TENS), ...Object.keys(HUNDREDS), 'mil', 'e'])
 
+// Matches a spoken 0-99 cents value like "quarenta" or "quarenta e cinco".
+const CENTS_WORDS_PATTERN = `(?:(?:${Object.keys(TENS).join('|')})(?:\\s+e\\s+(?:${Object.keys(UNITS).join('|')}))?|${Object.keys(UNITS).join('|')})`
+
 /** Converts a run of Portuguese number words (e.g. "cento e vinte") into a number. */
 function wordsToNumber(tokens: string[]): number {
   let total = 0
@@ -83,11 +86,21 @@ export function extractAmount(rawText: string): number | null {
   }
 
   // "145 e 40" / "145 reais e 40" -> 145,40: voice input often says the decimal part joined by
-  // "e" instead of a comma (e.g. "cento e quarenta e cinco e quarenta").
+  // "e" instead of a comma, either as digits or spelled out.
   const centsDigitMatch = normalized.match(/\b(\d+)(?:\s*reais?)?\s+e\s+(\d{1,2})\b(?!\d)(?!\s*reais?)/)
   if (centsDigitMatch) {
     const whole = Number(centsDigitMatch[1])
     const cents = Number(centsDigitMatch[2])
+    if (!Number.isNaN(whole)) return whole + cents / 100
+  }
+
+  // "145 e quarenta" / "145 reais e quarenta e cinco" -> 145,40 / 145,45
+  const centsDigitWordMatch = normalized.match(
+    new RegExp(`\\b(\\d+)(?:\\s*reais?)?\\s+e\\s+(${CENTS_WORDS_PATTERN})\\b(?!\\s*(?:mil|centos?|reais?))`),
+  )
+  if (centsDigitWordMatch) {
+    const whole = Number(centsDigitWordMatch[1])
+    const cents = wordsToNumber(centsDigitWordMatch[2].split(/\s+e\s+/))
     if (!Number.isNaN(whole)) return whole + cents / 100
   }
 
@@ -121,8 +134,10 @@ function parseAmountToken(token: string): number | null {
 }
 
 const INCOME_KEYWORDS = [
-  'recebi', 'recebimento', 'salario', 'salário', 'renda', 'ganhei', 'entrou',
+  'recebi', 'recebimento', 'recebendo', 'salario', 'salário', 'renda', 'ganhei', 'ganho', 'entrou', 'entrada de',
   'freela', 'freelance', 'bonus', 'bônus', 'pagamento recebido', 'pix recebido', 'reembolso', '13o', 'decimo terceiro',
+  'décimo terceiro', 'caiu', 'depositaram', 'depositou', 'deposito de', 'depósito de', 'transferencia recebida',
+  'transferência recebida', 'vendi', 'venda de', 'comissao', 'comissão', 'cashback', 'restituicao', 'restituição',
 ]
 
 const RECURRING_KEYWORDS = [
