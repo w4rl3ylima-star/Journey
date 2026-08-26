@@ -14,7 +14,7 @@ interface GoalsViewProps {
 }
 
 export function GoalsView({ goals, transactions, onAddGoal, onUpdateGoal, onRemoveGoal }: GoalsViewProps) {
-  const [showForm, setShowForm] = useState(false)
+  const [formTarget, setFormTarget] = useState<'new' | Goal | null>(null)
   const [contributingId, setContributingId] = useState<string | null>(null)
   const { t, categoryLabel, formatCurrency } = useSettings()
 
@@ -28,7 +28,7 @@ export function GoalsView({ goals, transactions, onAddGoal, onUpdateGoal, onRemo
         <h1 className="text-xl font-semibold text-neutral-900 dark:text-white">{t('goals.title', 'Metas')}</h1>
         <button
           type="button"
-          onClick={() => setShowForm(true)}
+          onClick={() => setFormTarget('new')}
           className="rounded-full bg-teal-500 px-4 py-2 text-sm font-semibold text-white"
         >
           {t('goals.new', '+ Nova meta')}
@@ -46,6 +46,7 @@ export function GoalsView({ goals, transactions, onAddGoal, onUpdateGoal, onRemo
           <GoalCard
             key={p.goal.id}
             progress={p}
+            onEdit={() => setFormTarget(p.goal)}
             onContribute={() => setContributingId(p.goal.id)}
             onRemove={() => onRemoveGoal(p.goal.id)}
           />
@@ -78,12 +79,17 @@ export function GoalsView({ goals, transactions, onAddGoal, onUpdateGoal, onRemo
         </section>
       )}
 
-      {showForm && (
+      {formTarget && (
         <GoalForm
-          onClose={() => setShowForm(false)}
-          onSave={(goal) => {
-            onAddGoal(goal)
-            setShowForm(false)
+          goal={formTarget === 'new' ? undefined : formTarget}
+          onClose={() => setFormTarget(null)}
+          onSave={(fields) => {
+            if (formTarget === 'new') {
+              onAddGoal(fields)
+            } else {
+              onUpdateGoal(formTarget.id, fields)
+            }
+            setFormTarget(null)
           }}
         />
       )}
@@ -104,10 +110,12 @@ export function GoalsView({ goals, transactions, onAddGoal, onUpdateGoal, onRemo
 
 function GoalCard({
   progress,
+  onEdit,
   onContribute,
   onRemove,
 }: {
   progress: ReturnType<typeof computeGoalProgress>[number]
+  onEdit: () => void
   onContribute: () => void
   onRemove: () => void
 }) {
@@ -117,7 +125,19 @@ function GoalCard({
   const monthWord = (n: number) => (n === 1 ? t('goals.month', 'mês') : t('goals.months', 'meses'))
 
   return (
-    <div className="rounded-3xl border border-black/5 bg-white p-4 dark:border-white/5 dark:bg-[#141413]">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onEdit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onEdit()
+        }
+      }}
+      aria-label={t('goals.editHint', 'Toque para editar a meta')}
+      className="rounded-3xl border border-black/5 bg-white p-4 text-left transition-transform active:scale-[0.99] dark:border-white/5 dark:bg-[#141413]"
+    >
       <div className="mb-2 flex items-start justify-between">
         <div>
           <p className="text-base font-semibold text-neutral-900 dark:text-white">
@@ -127,9 +147,22 @@ function GoalCard({
             {formatCurrency(goal.currentAmount)} {t('goals.of', 'de')} {formatCurrency(goal.targetAmount)}
           </p>
         </div>
-        <button type="button" onClick={onRemove} aria-label="Remover meta" className="text-neutral-300 hover:text-rose-500">
-          ✕
-        </button>
+        <div className="flex items-center gap-1">
+          <span aria-hidden className="px-1 text-sm text-neutral-300">
+            ✏️
+          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onRemove()
+            }}
+            aria-label="Remover meta"
+            className="p-1 text-neutral-300 hover:text-rose-500"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       <div className="mb-3 h-2.5 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-white/10">
@@ -162,7 +195,10 @@ function GoalCard({
       {!complete && (
         <button
           type="button"
-          onClick={onContribute}
+          onClick={(e) => {
+            e.stopPropagation()
+            onContribute()
+          }}
           className="w-full rounded-2xl bg-neutral-100 py-2.5 text-sm font-semibold text-neutral-700 dark:bg-white/5 dark:text-neutral-200"
         >
           {t('goals.addAmount', '+ Adicionar valor')}

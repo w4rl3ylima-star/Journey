@@ -3,19 +3,22 @@ import type { Goal } from '../lib/types'
 import { useSettings } from '../contexts/SettingsContext'
 
 interface GoalFormProps {
+  /** Pass an existing goal to edit it in place; omit to create a new one. */
+  goal?: Goal
   onClose: () => void
   onSave: (goal: Omit<Goal, 'id' | 'createdAt'>) => void
 }
 
 const EMOJI_OPTIONS = ['🎯', '✈️', '🏡', '🚗', '🎓', '💍', '👶', '🩺', '🖥️', '🐷']
 
-export function GoalForm({ onClose, onSave }: GoalFormProps) {
+export function GoalForm({ goal, onClose, onSave }: GoalFormProps) {
   const { t } = useSettings()
-  const [emoji, setEmoji] = useState(EMOJI_OPTIONS[0])
-  const [name, setName] = useState('')
-  const [targetAmount, setTargetAmount] = useState('')
-  const [currentAmount, setCurrentAmount] = useState('')
-  const [targetDate, setTargetDate] = useState('')
+  const isEditing = !!goal
+  const [emoji, setEmoji] = useState(goal?.emoji ?? EMOJI_OPTIONS[0])
+  const [name, setName] = useState(goal?.name ?? '')
+  const [targetAmount, setTargetAmount] = useState(goal ? String(goal.targetAmount) : '')
+  const [currentAmount, setCurrentAmount] = useState(goal ? String(goal.currentAmount) : '')
+  const [targetDate, setTargetDate] = useState(goal?.targetDate ?? '')
 
   const canSave = name.trim().length > 0 && Number(targetAmount) > 0
 
@@ -37,7 +40,9 @@ export function GoalForm({ onClose, onSave }: GoalFormProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 flex items-center justify-between border-b border-black/5 bg-white px-5 py-4 dark:border-white/5 dark:bg-[#141413]">
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">{t('goalForm.title', 'Nova meta')}</h2>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
+            {isEditing ? t('goalForm.editTitle', 'Editar meta') : t('goalForm.title', 'Nova meta')}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -116,7 +121,7 @@ export function GoalForm({ onClose, onSave }: GoalFormProps) {
             disabled={!canSave}
             className="w-full rounded-2xl bg-teal-500 py-4 text-base font-semibold text-white transition-opacity disabled:opacity-30"
           >
-            {t('goalForm.create', 'Criar meta')}
+            {isEditing ? t('goalForm.save', 'Salvar alterações') : t('goalForm.create', 'Criar meta')}
           </button>
         </div>
       </div>
