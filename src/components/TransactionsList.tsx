@@ -7,12 +7,13 @@ import { useSettings } from '../contexts/SettingsContext'
 
 interface TransactionsListProps {
   transactions: Transaction[]
+  onEdit: (transaction: Transaction) => void
   onRemove: (id: string) => void
 }
 
 type Filter = 'all' | 'expense' | 'income'
 
-export function TransactionsList({ transactions, onRemove }: TransactionsListProps) {
+export function TransactionsList({ transactions, onEdit, onRemove }: TransactionsListProps) {
   const [filter, setFilter] = useState<Filter>('all')
   const isDark = useIsDarkMode()
   const { t, categoryLabel, formatCurrency, formatDateLabel } = useSettings()
@@ -76,7 +77,17 @@ export function TransactionsList({ transactions, onRemove }: TransactionsListPro
               return (
                 <div
                   key={tx.id}
-                  className="flex items-center gap-3 rounded-2xl border border-black/5 bg-white p-3 dark:border-white/5 dark:bg-[#141413]"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onEdit(tx)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onEdit(tx)
+                    }
+                  }}
+                  aria-label={t('tx.editHint', 'Toque para editar o lançamento')}
+                  className="flex items-center gap-3 rounded-2xl border border-black/5 bg-white p-3 text-left transition-transform active:scale-[0.99] dark:border-white/5 dark:bg-[#141413]"
                 >
                   <div
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg"
@@ -103,9 +114,12 @@ export function TransactionsList({ transactions, onRemove }: TransactionsListPro
                   </p>
                   <button
                     type="button"
-                    onClick={() => onRemove(tx.id)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onRemove(tx.id)
+                    }}
                     aria-label="Remover lançamento"
-                    className="shrink-0 text-neutral-300 hover:text-rose-500"
+                    className="shrink-0 p-1 text-neutral-300 hover:text-rose-500"
                   >
                     ✕
                   </button>

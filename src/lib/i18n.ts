@@ -59,7 +59,9 @@ const EN: Record<string, string> = {
   'dashboard.noExpenses': 'No expenses this month yet.',
 
   'add.title': 'New entry',
+  'add.editTitle': 'Edit entry',
   'add.placeholder': 'e.g. spent 45 on groceries',
+  'add.editPlaceholder': 'Speak or type to redo this entry',
   'add.listening': 'Listening… say the expense and tap the mic again to stop.',
   'add.notSupported': 'Voice input isn\'t supported in this browser — use the text field.',
   'add.error': 'Couldn\'t understand the audio, try again.',
@@ -71,6 +73,7 @@ const EN: Record<string, string> = {
   'add.date': 'Date',
   'add.recurring': 'Repeats monthly',
   'add.save': 'Save',
+  'add.saveChanges': 'Save changes',
 
   'tx.title': 'History',
   'tx.all': 'All',
@@ -79,6 +82,7 @@ const EN: Record<string, string> = {
   'tx.empty': 'No entries yet. Tap + to get started.',
   'tx.income.label': 'Income',
   'tx.monthly': 'monthly',
+  'tx.editHint': 'Tap to edit this entry',
 
   'goals.title': 'Goals',
   'goals.new': '+ New goal',

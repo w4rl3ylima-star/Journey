@@ -7,11 +7,13 @@ import { GoalsView } from './components/GoalsView'
 import { AddSheet } from './components/AddSheet'
 import { TopBar } from './components/TopBar'
 import { SettingsSheet } from './components/SettingsSheet'
+import type { Transaction } from './lib/types'
 
 function App() {
-  const { transactions, goals, addTransaction, removeTransaction, addGoal, updateGoal, removeGoal } = useAppData()
+  const { transactions, goals, addTransaction, updateTransaction, removeTransaction, addGoal, updateGoal, removeGoal } =
+    useAppData()
   const [view, setView] = useState<View>('dashboard')
-  const [showAdd, setShowAdd] = useState(false)
+  const [addTarget, setAddTarget] = useState<'new' | Transaction | null>(null)
   const [showSettings, setShowSettings] = useState(false)
 
   return (
@@ -22,7 +24,9 @@ function App() {
         {view === 'dashboard' && (
           <Dashboard transactions={transactions} goals={goals} onViewGoals={() => setView('goals')} />
         )}
-        {view === 'transactions' && <TransactionsList transactions={transactions} onRemove={removeTransaction} />}
+        {view === 'transactions' && (
+          <TransactionsList transactions={transactions} onEdit={(tx) => setAddTarget(tx)} onRemove={removeTransaction} />
+        )}
         {view === 'goals' && (
           <GoalsView
             goals={goals}
@@ -34,14 +38,19 @@ function App() {
         )}
       </main>
 
-      <BottomNav active={view} onNavigate={setView} onAdd={() => setShowAdd(true)} />
+      <BottomNav active={view} onNavigate={setView} onAdd={() => setAddTarget('new')} />
 
-      {showAdd && (
+      {addTarget && (
         <AddSheet
-          onClose={() => setShowAdd(false)}
+          transaction={addTarget === 'new' ? undefined : addTarget}
+          onClose={() => setAddTarget(null)}
           onSave={(entry) => {
-            addTransaction(entry)
-            setShowAdd(false)
+            if (addTarget === 'new') {
+              addTransaction(entry)
+            } else {
+              updateTransaction(addTarget.id, entry)
+            }
+            setAddTarget(null)
           }}
         />
       )}

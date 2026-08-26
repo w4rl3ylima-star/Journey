@@ -15,6 +15,13 @@ export function useAppData() {
     return tx
   }, [])
 
+  const updateTransaction = useCallback((id: string, patch: Partial<Omit<Transaction, 'id' | 'createdAt'>>) => {
+    setData((prev) => ({
+      ...prev,
+      transactions: prev.transactions.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+    }))
+  }, [])
+
   const removeTransaction = useCallback((id: string) => {
     setData((prev) => ({ ...prev, transactions: prev.transactions.filter((t) => t.id !== id) }))
   }, [])
@@ -40,6 +47,7 @@ export function useAppData() {
     transactions: data.transactions,
     goals: data.goals,
     addTransaction,
+    updateTransaction,
     removeTransaction,
     addGoal,
     updateGoal,

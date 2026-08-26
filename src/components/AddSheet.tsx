@@ -10,11 +10,14 @@ import { useSettings } from '../contexts/SettingsContext'
 import { CURRENCIES } from '../lib/i18n'
 
 interface AddSheetProps {
+  /** Pass an existing transaction to edit it in place; omit to create a new one. */
+  transaction?: Transaction
   onClose: () => void
   onSave: (entry: Omit<Transaction, 'id' | 'createdAt'>) => void
 }
 
-export function AddSheet({ onClose, onSave }: AddSheetProps) {
+export function AddSheet({ transaction, onClose, onSave }: AddSheetProps) {
+  const isEditing = !!transaction
   // Voice/text parsing understands casual Brazilian Portuguese phrasing regardless of the UI
   // language setting, so recognition stays pinned to pt-BR — switching it would break parsing.
   const speech = useSpeechRecognition('pt-BR')
@@ -22,16 +25,25 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
   const { t, categoryLabel, currency } = useSettings()
   const currencySymbol = CURRENCIES.find((c) => c.id === currency)?.symbol ?? currency
   const [freeText, setFreeText] = useState('')
-  const [usedVoice, setUsedVoice] = useState(false)
+  const [usedVoice, setUsedVoice] = useState(transaction?.createdVia === 'voice')
 
-  const [amount, setAmount] = useState('')
-  const [categoryId, setCategoryId] = useState<CategoryId | null>(null)
-  const [type, setType] = useState<'expense' | 'income'>('expense')
-  const [recurring, setRecurring] = useState(false)
-  const [description, setDescription] = useState('')
-  const [date, setDate] = useState(todayISO())
+  const [amount, setAmount] = useState(transaction ? String(transaction.amount) : '')
+  const [categoryId, setCategoryId] = useState<CategoryId | null>(transaction?.categoryId ?? null)
+  const [type, setType] = useState<'expense' | 'income'>(transaction?.type ?? 'expense')
+  const [recurring, setRecurring] = useState(transaction?.recurring ?? false)
+  const [description, setDescription] = useState(transaction?.description ?? '')
+  const [date, setDate] = useState(transaction?.date ?? todayISO())
 
-  const dirty = useRef({ amount: false, category: false, type: false, recurring: false, description: false })
+  // When editing, the fields start pre-filled from the existing transaction and "dirty" (protected
+  // from the empty freeText field re-parsing over them); typing/dictating a fresh description
+  // resets dirty back to false, same as starting a brand new entry.
+  const dirty = useRef({
+    amount: isEditing,
+    category: isEditing,
+    type: isEditing,
+    recurring: isEditing,
+    description: isEditing,
+  })
 
   // Re-parses `text` and applies every field the user hasn't manually edited since the last
   // parse. Called directly (not only via the freeText effect below) so a final speech result
@@ -97,7 +109,9 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 flex items-center justify-between border-b border-black/5 bg-white px-5 py-4 dark:border-white/5 dark:bg-[#141413]">
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">{t('add.title', 'Novo lançamento')}</h2>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
+            {isEditing ? t('add.editTitle', 'Editar lançamento') : t('add.title', 'Novo lançamento')}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -113,8 +127,11 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
             <input
               type="text"
               value={freeText}
-              onChange={(e) => setFreeText(e.target.value)}
-              placeholder={t('add.placeholder', 'Ex: gastei 45 reais no mercado')}
+              onChange={(e) => {
+                dirty.current = { amount: false, category: false, type: false, recurring: false, description: false }
+                setFreeText(e.target.value)
+              }}
+              placeholder={isEditing ? t('add.editPlaceholder', 'Fale ou digite para refazer o lançamento') : t('add.placeholder', 'Ex: gastei 45 reais no mercado')}
               className="flex-1 rounded-2xl border border-black/10 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-teal-500 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
             />
             {speech.isSupported && (
@@ -257,7 +274,7 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
             disabled={!canSave}
             className="w-full rounded-2xl bg-teal-500 py-4 text-base font-semibold text-white transition-opacity disabled:opacity-30"
           >
-            {t('add.save', 'Salvar')}
+            {isEditing ? t('add.saveChanges', 'Salvar alterações') : t('add.save', 'Salvar')}
           </button>
         </div>
       </div>
