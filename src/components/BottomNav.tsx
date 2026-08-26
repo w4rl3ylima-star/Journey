@@ -1,3 +1,5 @@
+import { useSettings } from '../contexts/SettingsContext'
+
 export type View = 'dashboard' | 'transactions' | 'goals'
 
 interface BottomNavProps {
@@ -6,37 +8,32 @@ interface BottomNavProps {
   onAdd: () => void
 }
 
-const ITEMS: { id: View; label: string; icon: string }[] = [
-  { id: 'dashboard', label: 'Início', icon: '📊' },
-  { id: 'transactions', label: 'Extrato', icon: '🧾' },
-]
-
-const ITEMS_RIGHT: { id: View; label: string; icon: string }[] = [
-  { id: 'goals', label: 'Metas', icon: '🎯' },
-]
-
 export function BottomNav({ active, onNavigate, onAdd }: BottomNavProps) {
+  const { t } = useSettings()
+
+  const items: { id: View; label: string; icon: string }[] = [
+    { id: 'dashboard', label: t('nav.dashboard', 'Início'), icon: '📊' },
+    { id: 'transactions', label: t('nav.transactions', 'Extrato'), icon: '🧾' },
+    { id: 'goals', label: t('nav.goals', 'Metas'), icon: '🎯' },
+  ]
+
   return (
     <nav
-      className="sticky bottom-0 z-20 flex items-center justify-around border-t border-black/10 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-white/10 dark:bg-[#141413]/90"
-      aria-label="Navegação principal"
+      className="sticky bottom-0 z-20 flex shrink-0 items-center gap-1 border-t border-black/10 bg-white/90 pb-[env(safe-area-inset-bottom)] pr-3 backdrop-blur dark:border-white/10 dark:bg-[#141413]/90"
+      aria-label={t('nav.dashboard', 'Navegação principal')}
     >
-      {ITEMS.map((item) => (
+      {items.map((item) => (
         <NavButton key={item.id} item={item} active={active === item.id} onClick={() => onNavigate(item.id)} />
       ))}
 
       <button
         type="button"
         onClick={onAdd}
-        aria-label="Adicionar lançamento"
-        className="relative -top-4 flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-2xl text-white shadow-lg shadow-teal-500/30 active:scale-95 transition-transform"
+        aria-label={t('nav.add', 'Adicionar lançamento')}
+        className="relative -top-3 ml-1 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-teal-500 text-2xl text-white shadow-lg shadow-teal-500/30 transition-transform active:scale-95"
       >
         +
       </button>
-
-      {ITEMS_RIGHT.map((item) => (
-        <NavButton key={item.id} item={item} active={active === item.id} onClick={() => onNavigate(item.id)} />
-      ))}
     </nav>
   )
 }

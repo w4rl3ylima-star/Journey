@@ -1,34 +1,28 @@
-const currencyFormatter = new Intl.NumberFormat('pt-BR', {
-  style: 'currency',
-  currency: 'BRL',
-  maximumFractionDigits: 2,
-})
+import type { CurrencyCode, Language } from './i18n'
 
-const compactCurrencyFormatter = new Intl.NumberFormat('pt-BR', {
-  style: 'currency',
-  currency: 'BRL',
-  notation: 'compact',
-  maximumFractionDigits: 1,
-})
-
-export function formatCurrency(value: number): string {
-  return currencyFormatter.format(value)
+export function formatCurrency(value: number, locale: Language = 'pt-BR', currency: CurrencyCode = 'BRL'): string {
+  return new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: 2 }).format(value)
 }
 
-export function formatCurrencyCompact(value: number): string {
-  return compactCurrencyFormatter.format(value)
+export function formatCurrencyCompact(value: number, locale: Language = 'pt-BR', currency: CurrencyCode = 'BRL'): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value)
 }
 
-export function formatMonthLabel(monthKey: string): string {
+export function formatMonthLabel(monthKey: string, locale: Language = 'pt-BR'): string {
   const [year, month] = monthKey.split('-').map(Number)
   const date = new Date(year, month - 1, 1)
-  const label = date.toLocaleDateString('pt-BR', { month: 'short' })
+  const label = date.toLocaleDateString(locale, { month: 'short' })
   return label.charAt(0).toUpperCase() + label.slice(1).replace('.', '')
 }
 
-export function formatDateLabel(iso: string): string {
+export function formatDateLabel(iso: string, locale: Language = 'pt-BR'): string {
   const date = new Date(`${iso}T00:00:00`)
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+  return date.toLocaleDateString(locale, { day: '2-digit', month: 'short' })
 }
 
 export function monthKey(iso: string): string {

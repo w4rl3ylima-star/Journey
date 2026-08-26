@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Goal } from '../lib/types'
+import { useSettings } from '../contexts/SettingsContext'
 
 interface GoalFormProps {
   onClose: () => void
@@ -9,6 +10,7 @@ interface GoalFormProps {
 const EMOJI_OPTIONS = ['🎯', '✈️', '🏡', '🚗', '🎓', '💍', '👶', '🩺', '🖥️', '🐷']
 
 export function GoalForm({ onClose, onSave }: GoalFormProps) {
+  const { t } = useSettings()
   const [emoji, setEmoji] = useState(EMOJI_OPTIONS[0])
   const [name, setName] = useState('')
   const [targetAmount, setTargetAmount] = useState('')
@@ -35,7 +37,7 @@ export function GoalForm({ onClose, onSave }: GoalFormProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 flex items-center justify-between border-b border-black/5 bg-white px-5 py-4 dark:border-white/5 dark:bg-[#141413]">
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Nova meta</h2>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">{t('goalForm.title', 'Nova meta')}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -63,19 +65,19 @@ export function GoalForm({ onClose, onSave }: GoalFormProps) {
           </div>
 
           <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">Nome da meta</p>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">{t('goalForm.name', 'Nome da meta')}</p>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Viagem para a praia"
+              placeholder={t('goalForm.namePlaceholder', 'Ex: Viagem para a praia')}
               className="w-full rounded-2xl border border-black/10 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-teal-500 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
             />
           </div>
 
           <div className="flex gap-3">
             <div className="flex-1">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">Valor alvo</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">{t('goalForm.target', 'Valor alvo')}</p>
               <input
                 type="number"
                 inputMode="decimal"
@@ -86,7 +88,7 @@ export function GoalForm({ onClose, onSave }: GoalFormProps) {
               />
             </div>
             <div className="flex-1">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">Já tenho</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">{t('goalForm.current', 'Já tenho')}</p>
               <input
                 type="number"
                 inputMode="decimal"
@@ -99,7 +101,7 @@ export function GoalForm({ onClose, onSave }: GoalFormProps) {
           </div>
 
           <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">Data alvo (opcional)</p>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">{t('goalForm.targetDate', 'Data alvo (opcional)')}</p>
             <input
               type="date"
               value={targetDate}
@@ -114,7 +116,7 @@ export function GoalForm({ onClose, onSave }: GoalFormProps) {
             disabled={!canSave}
             className="w-full rounded-2xl bg-teal-500 py-4 text-base font-semibold text-white transition-opacity disabled:opacity-30"
           >
-            Criar meta
+            {t('goalForm.create', 'Criar meta')}
           </button>
         </div>
       </div>

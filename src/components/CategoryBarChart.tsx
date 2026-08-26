@@ -1,7 +1,7 @@
 import { getCategory, type CategoryId } from '../lib/categories'
-import { formatCurrency, formatCurrencyCompact } from '../lib/format'
 import { categoryColor } from '../lib/chartTheme'
 import { useIsDarkMode } from '../hooks/useColorScheme'
+import { useSettings } from '../contexts/SettingsContext'
 
 interface CategoryBarChartProps {
   byCategory: Record<string, number>
@@ -22,14 +22,15 @@ const MAX_BAR = 128
 
 export function CategoryBarChart({ byCategory, income }: CategoryBarChartProps) {
   const isDark = useIsDarkMode()
+  const { t, categoryLabel, categoryShort, formatCurrency, formatCurrencyCompact } = useSettings()
 
   const rows: Row[] = Object.entries(byCategory)
     .map(([id, amount]) => {
       const cat = getCategory(id as CategoryId)
       return {
         categoryId: cat.id,
-        label: cat.label,
-        short: cat.short,
+        label: categoryLabel(cat.id, cat.label),
+        short: categoryShort(cat.id, cat.short),
         emoji: cat.emoji,
         amount,
         pctOfIncome: income > 0 ? (amount / income) * 100 : null,
@@ -40,7 +41,7 @@ export function CategoryBarChart({ byCategory, income }: CategoryBarChartProps) 
   if (rows.length === 0) {
     return (
       <div className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-black/10 text-sm text-neutral-400 dark:border-white/10">
-        Nenhuma despesa neste mês ainda.
+        {t('dashboard.noExpenses', 'Nenhuma despesa neste mês ainda.')}
       </div>
     )
   }

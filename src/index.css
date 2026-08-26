@@ -1,7 +1,14 @@
 @import 'tailwindcss';
 
+/* Manual light/dark control (Settings → Theme) instead of pure prefers-color-scheme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   color-scheme: light dark;
+}
+
+:root.dark {
+  color-scheme: dark;
 }
 
 * {
@@ -12,6 +19,7 @@ html,
 body,
 #root {
   height: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -27,14 +35,12 @@ body {
   flex-direction: column;
   max-width: 480px;
   margin: 0 auto;
-  min-height: 100dvh;
+  height: 100dvh;
   background: #f9f9f7;
 }
 
-@media (prefers-color-scheme: dark) {
-  #root {
-    background: #0d0d0d;
-  }
+.dark #root {
+  background: #0d0d0d;
 }
 
 input,

@@ -1,8 +1,8 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { MonthSummary, ProjectedMonth } from '../lib/projections'
-import { formatCurrency, formatCurrencyCompact, formatMonthLabel } from '../lib/format'
 import { chartChrome } from '../lib/chartTheme'
 import { useIsDarkMode } from '../hooks/useColorScheme'
+import { useSettings } from '../contexts/SettingsContext'
 
 interface TrendChartProps {
   history: MonthSummary[]
@@ -24,8 +24,12 @@ interface Point {
 export function TrendChart({ history, projected }: TrendChartProps) {
   const isDark = useIsDarkMode()
   const chrome = chartChrome(isDark)
+  const { t, formatCurrency, formatCurrencyCompact, formatMonthLabel } = useSettings()
   const income = isDark ? INCOME_COLOR.dark : INCOME_COLOR.light
   const expense = isDark ? EXPENSE_COLOR.dark : EXPENSE_COLOR.light
+  const incomeLabel = t('dashboard.trend.legend.income', 'Receita')
+  const expenseLabel = t('dashboard.trend.legend.expense', 'Despesa')
+  const forecastSuffix = ` (${t('dashboard.trend.legend.forecast', 'projeção')})`
 
   const points: Point[] = history.map((m) => ({
     key: m.key,
@@ -74,30 +78,30 @@ export function TrendChart({ history, projected }: TrendChartProps) {
               fontSize: 12,
               color: chrome.textPrimary,
             }}
-            formatter={(value, name) => {
+            formatter={(value, _name, item) => {
               if (value === null || value === undefined) return ['', '']
-              const seriesName = String(name)
-              const isProjected = seriesName.includes('projetad')
-              const label = seriesName.includes('Receita') ? 'Receita' : 'Despesa'
-              return [`${formatCurrency(Number(value))}${isProjected ? ' (projeção)' : ''}`, label]
+              const dataKey = String(item.dataKey ?? '')
+              const isProjected = dataKey.endsWith('Projected')
+              const label = dataKey.startsWith('income') ? incomeLabel : expenseLabel
+              return [`${formatCurrency(Number(value))}${isProjected ? forecastSuffix : ''}`, label]
             }}
           />
-          <Line type="monotone" dataKey="incomeActual" name="Receita" stroke={income} strokeWidth={2} dot={{ r: 3 }} connectNulls={false} />
+          <Line type="monotone" dataKey="incomeActual" name={incomeLabel} stroke={income} strokeWidth={2} dot={{ r: 3 }} connectNulls={false} />
           <Line
             type="monotone"
             dataKey="incomeProjected"
-            name="Receita projetada"
+            name={`${incomeLabel}${forecastSuffix}`}
             stroke={income}
             strokeWidth={2}
             strokeDasharray="5 5"
             dot={{ r: 3 }}
             connectNulls
           />
-          <Line type="monotone" dataKey="expenseActual" name="Despesa" stroke={expense} strokeWidth={2} dot={{ r: 3 }} connectNulls={false} />
+          <Line type="monotone" dataKey="expenseActual" name={expenseLabel} stroke={expense} strokeWidth={2} dot={{ r: 3 }} connectNulls={false} />
           <Line
             type="monotone"
             dataKey="expenseProjected"
-            name="Despesa projetada"
+            name={`${expenseLabel}${forecastSuffix}`}
             stroke={expense}
             strokeWidth={2}
             strokeDasharray="5 5"
@@ -107,9 +111,9 @@ export function TrendChart({ history, projected }: TrendChartProps) {
         </LineChart>
       </ResponsiveContainer>
       <div className="mt-1 flex items-center justify-center gap-4 text-xs text-neutral-500 dark:text-neutral-400">
-        <LegendDot color={income} label="Receita" />
-        <LegendDot color={expense} label="Despesa" />
-        <span className="text-neutral-300 dark:text-neutral-600">┄ projeção</span>
+        <LegendDot color={income} label={incomeLabel} />
+        <LegendDot color={expense} label={expenseLabel} />
+        <span className="text-neutral-300 dark:text-neutral-600">┄ {t('dashboard.trend.legend.forecast', 'projeção')}</span>
       </div>
     </div>
   )

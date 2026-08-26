@@ -1,16 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useSettings } from '../contexts/SettingsContext'
 
+/** Resolves the user's Settings → Theme choice (light/dark/system) to a boolean. */
 export function useIsDarkMode(): boolean {
-  const [isDark, setIsDark] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches,
-  )
-
-  useEffect(() => {
-    const mql = window.matchMedia('(prefers-color-scheme: dark)')
-    const listener = (e: MediaQueryListEvent) => setIsDark(e.matches)
-    mql.addEventListener('change', listener)
-    return () => mql.removeEventListener('change', listener)
-  }, [])
-
-  return isDark
+  return useSettings().isDark
 }

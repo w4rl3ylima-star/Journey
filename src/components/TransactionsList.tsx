@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import type { Transaction } from '../lib/types'
 import { getCategory } from '../lib/categories'
-import { formatCurrency, formatDateLabel } from '../lib/format'
 import { useIsDarkMode } from '../hooks/useColorScheme'
 import { categoryColor } from '../lib/chartTheme'
+import { useSettings } from '../contexts/SettingsContext'
 
 interface TransactionsListProps {
   transactions: Transaction[]
@@ -15,6 +15,7 @@ type Filter = 'all' | 'expense' | 'income'
 export function TransactionsList({ transactions, onRemove }: TransactionsListProps) {
   const [filter, setFilter] = useState<Filter>('all')
   const isDark = useIsDarkMode()
+  const { t, categoryLabel, formatCurrency, formatDateLabel } = useSettings()
 
   const filtered = useMemo(
     () => (filter === 'all' ? transactions : transactions.filter((t) => t.type === filter)),
@@ -31,20 +32,20 @@ export function TransactionsList({ transactions, onRemove }: TransactionsListPro
     return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0]))
   }, [filtered])
 
+  const filters: [Filter, string][] = [
+    ['all', t('tx.all', 'Todos')],
+    ['expense', t('tx.expenses', 'Despesas')],
+    ['income', t('tx.income', 'Receitas')],
+  ]
+
   return (
     <div className="flex flex-col gap-4 px-5 py-5">
       <header>
-        <h1 className="text-xl font-semibold text-neutral-900 dark:text-white">Extrato</h1>
+        <h1 className="text-xl font-semibold text-neutral-900 dark:text-white">{t('tx.title', 'Extrato')}</h1>
       </header>
 
       <div className="flex gap-2">
-        {(
-          [
-            ['all', 'Todos'],
-            ['expense', 'Despesas'],
-            ['income', 'Receitas'],
-          ] as [Filter, string][]
-        ).map(([id, label]) => (
+        {filters.map(([id, label]) => (
           <button
             key={id}
             type="button"
@@ -61,7 +62,9 @@ export function TransactionsList({ transactions, onRemove }: TransactionsListPro
       </div>
 
       {groups.length === 0 && (
-        <p className="mt-8 text-center text-sm text-neutral-400">Nenhum lançamento ainda. Toque no + para começar.</p>
+        <p className="mt-8 text-center text-sm text-neutral-400">
+          {t('tx.empty', 'Nenhum lançamento ainda. Toque no + para começar.')}
+        </p>
       )}
 
       {groups.map(([date, txs]) => (
@@ -86,8 +89,8 @@ export function TransactionsList({ transactions, onRemove }: TransactionsListPro
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-100">{tx.description}</p>
                     <p className="text-xs text-neutral-400">
-                      {cat ? cat.label : 'Receita'}
-                      {tx.recurring ? ' · mensal' : ''}
+                      {cat ? categoryLabel(cat.id, cat.label) : t('tx.income.label', 'Receita')}
+                      {tx.recurring ? ` · ${t('tx.monthly', 'mensal')}` : ''}
                       {tx.createdVia === 'voice' ? ' · 🎤' : ''}
                     </p>
                   </div>

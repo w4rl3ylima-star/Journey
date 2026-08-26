@@ -6,6 +6,8 @@ import { todayISO } from '../lib/storage'
 import type { Transaction } from '../lib/types'
 import { useIsDarkMode } from '../hooks/useColorScheme'
 import { categoryColor } from '../lib/chartTheme'
+import { useSettings } from '../contexts/SettingsContext'
+import { CURRENCIES } from '../lib/i18n'
 
 interface AddSheetProps {
   onClose: () => void
@@ -13,8 +15,12 @@ interface AddSheetProps {
 }
 
 export function AddSheet({ onClose, onSave }: AddSheetProps) {
+  // Voice/text parsing understands casual Brazilian Portuguese phrasing regardless of the UI
+  // language setting, so recognition stays pinned to pt-BR — switching it would break parsing.
   const speech = useSpeechRecognition('pt-BR')
   const isDark = useIsDarkMode()
+  const { t, categoryLabel, currency } = useSettings()
+  const currencySymbol = CURRENCIES.find((c) => c.id === currency)?.symbol ?? currency
   const [freeText, setFreeText] = useState('')
   const [usedVoice, setUsedVoice] = useState(false)
 
@@ -68,7 +74,7 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
       type,
       amount: numericAmount,
       categoryId: type === 'income' ? null : categoryId,
-      description: description.trim() || (type === 'income' ? 'Receita' : 'Despesa'),
+      description: description.trim() || (type === 'income' ? t('add.income', 'Receita') : t('add.expense', 'Despesa')),
       date,
       recurring,
       createdVia: usedVoice ? 'voice' : 'text',
@@ -82,7 +88,7 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 flex items-center justify-between border-b border-black/5 bg-white px-5 py-4 dark:border-white/5 dark:bg-[#141413]">
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Novo lançamento</h2>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">{t('add.title', 'Novo lançamento')}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -99,7 +105,7 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
               type="text"
               value={freeText}
               onChange={(e) => setFreeText(e.target.value)}
-              placeholder="Ex: gastei 45 reais no mercado"
+              placeholder={t('add.placeholder', 'Ex: gastei 45 reais no mercado')}
               className="flex-1 rounded-2xl border border-black/10 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-teal-500 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
             />
             {speech.isSupported && (
@@ -116,14 +122,16 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
             )}
           </div>
           {speech.isListening && (
-            <p className="-mt-3 text-xs font-medium text-teal-600 dark:text-teal-400">Ouvindo… fale o gasto e toque no microfone de novo para parar.</p>
+            <p className="-mt-3 text-xs font-medium text-teal-600 dark:text-teal-400">
+              {t('add.listening', 'Ouvindo… fale o gasto e toque no microfone de novo para parar.')}
+            </p>
           )}
           {!speech.isSupported && (
             <p className="-mt-3 text-xs text-neutral-400">
-              Entrada por voz não é suportada neste navegador — use o campo de texto.
+              {t('add.notSupported', 'Entrada por voz não é suportada neste navegador — use o campo de texto.')}
             </p>
           )}
-          {speech.error && <p className="-mt-3 text-xs text-red-500">Não entendi o áudio, tente de novo.</p>}
+          {speech.error && <p className="-mt-3 text-xs text-red-500">{t('add.error', 'Não entendi o áudio, tente de novo.')}</p>}
 
           <div className="flex rounded-2xl bg-neutral-100 p-1 text-sm font-medium dark:bg-white/5">
             <button
@@ -136,7 +144,7 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
                 type === 'expense' ? 'bg-white text-neutral-900 shadow dark:bg-[#2a2a28] dark:text-white' : 'text-neutral-400'
               }`}
             >
-              Despesa
+              {t('add.expense', 'Despesa')}
             </button>
             <button
               type="button"
@@ -148,12 +156,12 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
                 type === 'income' ? 'bg-white text-neutral-900 shadow dark:bg-[#2a2a28] dark:text-white' : 'text-neutral-400'
               }`}
             >
-              Receita
+              {t('add.income', 'Receita')}
             </button>
           </div>
 
           <div className="flex items-center justify-center gap-1 rounded-2xl border border-black/10 px-4 py-4 dark:border-white/10">
-            <span className="text-2xl font-semibold text-neutral-400">R$</span>
+            <span className="text-2xl font-semibold text-neutral-400">{currencySymbol}</span>
             <input
               type="number"
               inputMode="decimal"
@@ -169,7 +177,7 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
 
           {type === 'expense' && (
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">Categoria</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">{t('add.category', 'Categoria')}</p>
               <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
                 {CATEGORIES.map((cat) => {
                   const active = categoryId === cat.id
@@ -188,7 +196,7 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
                       }}
                     >
                       <span className="text-lg leading-none">{cat.emoji}</span>
-                      {cat.label}
+                      {categoryLabel(cat.id, cat.label)}
                     </button>
                   )
                 })}
@@ -197,7 +205,7 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
           )}
 
           <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">Descrição</p>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">{t('add.description', 'Descrição')}</p>
             <input
               type="text"
               value={description}
@@ -205,14 +213,14 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
                 setDescription(e.target.value)
                 dirty.current.description = true
               }}
-              placeholder="Ex: Mercado"
+              placeholder={t('add.descriptionPlaceholder', 'Ex: Mercado')}
               className="w-full rounded-2xl border border-black/10 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-teal-500 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
             />
           </div>
 
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">Data</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">{t('add.date', 'Data')}</p>
               <input
                 type="date"
                 value={date}
@@ -221,7 +229,7 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
               />
             </div>
             <label className="flex flex-1 items-center justify-end gap-2 text-sm text-neutral-600 dark:text-neutral-300">
-              Repete todo mês
+              {t('add.recurring', 'Repete todo mês')}
               <input
                 type="checkbox"
                 checked={recurring}
@@ -240,7 +248,7 @@ export function AddSheet({ onClose, onSave }: AddSheetProps) {
             disabled={!canSave}
             className="w-full rounded-2xl bg-teal-500 py-4 text-base font-semibold text-white transition-opacity disabled:opacity-30"
           >
-            Salvar
+            {t('add.save', 'Salvar')}
           </button>
         </div>
       </div>

@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import type { Transaction, Goal } from '../lib/types'
 import { summarizeByMonth, projectForward, computeGoalProgress, monthOverMonthDelta } from '../lib/projections'
-import { formatCurrency, formatMonthLabel, currentMonthKey, addMonthsToKey } from '../lib/format'
+import { currentMonthKey, addMonthsToKey } from '../lib/format'
 import { CategoryBarChart } from './CategoryBarChart'
 import { TrendChart } from './TrendChart'
+import { useSettings } from '../contexts/SettingsContext'
 
 interface DashboardProps {
   transactions: Transaction[]
@@ -12,6 +13,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) {
+  const { t, formatMonthLabel } = useSettings()
   const months = useMemo(() => summarizeByMonth(transactions), [transactions])
   const earliestKey = months[0]?.key ?? currentMonthKey()
   const [selectedKey, setSelectedKey] = useState(currentMonthKey())
@@ -41,8 +43,10 @@ export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) 
     <div className="flex flex-col gap-5 px-5 py-5">
       <header className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Olá 👋</p>
-          <h1 className="text-2xl font-black uppercase tracking-tight text-neutral-900 dark:text-white">Seu resumo</h1>
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{t('dashboard.greeting', 'Olá 👋')}</p>
+          <h1 className="text-2xl font-black uppercase tracking-tight text-neutral-900 dark:text-white">
+            {t('dashboard.title', 'Seu resumo')}
+          </h1>
         </div>
         <div className="flex items-center gap-1 rounded-full bg-neutral-900 px-2 py-1 text-white dark:bg-white dark:text-neutral-900">
           <button
@@ -69,22 +73,30 @@ export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) 
 
       <section className="rounded-3xl bg-neutral-900 p-5 text-white dark:bg-black">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wide text-white/50">Saldo do mês</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-white/50">{t('dashboard.balance', 'Saldo do mês')}</p>
           <DeltaBadge value={netDelta} />
         </div>
-        <p className="mt-1 text-4xl font-black tabular-nums tracking-tight">{formatCurrency(selected.net)}</p>
+        <BalanceValue value={selected.net} />
 
         <div className="mt-5 flex gap-3">
-          <MiniStat label="Receita" value={selected.income} delta={incomeDelta} dotClassName="bg-emerald-400" />
-          <MiniStat label="Despesa" value={selected.expense} delta={expenseDelta} dotClassName="bg-rose-400" invertDeltaTone />
+          <MiniStat label={t('dashboard.income', 'Receita')} value={selected.income} delta={incomeDelta} dotClassName="bg-emerald-400" />
+          <MiniStat
+            label={t('dashboard.expense', 'Despesa')}
+            value={selected.expense}
+            delta={expenseDelta}
+            dotClassName="bg-rose-400"
+            invertDeltaTone
+          />
         </div>
       </section>
 
       <section className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-black/5 dark:bg-[#141413] dark:ring-white/5">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Gastos por categoria</h2>
+          <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
+            {t('dashboard.byCategory', 'Gastos por categoria')}
+          </h2>
           <span className="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-medium text-neutral-500 dark:bg-white/5 dark:text-neutral-400">
-            % da renda
+            {t('dashboard.pctOfIncome', '% da renda')}
           </span>
         </div>
         <CategoryBarChart byCategory={selected.byCategory} income={selected.income} />
@@ -92,21 +104,25 @@ export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) 
 
       <section className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-black/5 dark:bg-[#141413] dark:ring-white/5">
         <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Receita x Despesa</h2>
+          <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
+            {t('dashboard.trend', 'Receita x Despesa')}
+          </h2>
           <span className="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-medium text-neutral-500 dark:bg-white/5 dark:text-neutral-400">
-            + projeção
+            {t('dashboard.trend.projected', '+ projeção')}
           </span>
         </div>
-        <p className="mb-2 text-xs text-neutral-400">Últimos meses e os próximos 3, projetados pela sua média recente.</p>
+        <p className="mb-2 text-xs text-neutral-400">
+          {t('dashboard.trend.caption', 'Últimos meses e os próximos 3, projetados pela sua média recente.')}
+        </p>
         <TrendChart history={history} projected={projected} />
       </section>
 
       {topGoals.length > 0 && (
         <section className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-black/5 dark:bg-[#141413] dark:ring-white/5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Suas metas</h2>
+            <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{t('dashboard.goals', 'Suas metas')}</h2>
             <button type="button" onClick={onViewGoals} className="text-xs font-medium text-teal-600 dark:text-teal-400">
-              Ver todas
+              {t('dashboard.goals.viewAll', 'Ver todas')}
             </button>
           </div>
           <div className="flex flex-col gap-3">
@@ -128,6 +144,11 @@ export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) 
       )}
     </div>
   )
+}
+
+function BalanceValue({ value }: { value: number }) {
+  const { formatCurrency } = useSettings()
+  return <p className="mt-1 text-4xl font-black tabular-nums tracking-tight">{formatCurrency(value)}</p>
 }
 
 function DeltaBadge({ value, invertTone = false }: { value: number | null; invertTone?: boolean }) {
@@ -159,6 +180,7 @@ function MiniStat({
   dotClassName: string
   invertDeltaTone?: boolean
 }) {
+  const { formatCurrency } = useSettings()
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1.5 rounded-2xl bg-white/10 px-3 py-2.5">
       <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-white/60">
