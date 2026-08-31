@@ -5,16 +5,17 @@ import { useIsDarkMode } from '../hooks/useColorScheme'
 import { categoryColor } from '../lib/chartTheme'
 import { useSettings } from '../contexts/SettingsContext'
 
+type Filter = 'all' | 'expense' | 'income'
+
 interface TransactionsListProps {
   transactions: Transaction[]
+  initialFilter?: Filter
   onEdit: (transaction: Transaction) => void
   onRemove: (id: string) => void
 }
 
-type Filter = 'all' | 'expense' | 'income'
-
-export function TransactionsList({ transactions, onEdit, onRemove }: TransactionsListProps) {
-  const [filter, setFilter] = useState<Filter>('all')
+export function TransactionsList({ transactions, initialFilter = 'all', onEdit, onRemove }: TransactionsListProps) {
+  const [filter, setFilter] = useState<Filter>(initialFilter)
   const isDark = useIsDarkMode()
   const { t, categoryLabel, formatCurrency, formatDateLabel } = useSettings()
 

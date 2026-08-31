@@ -36,6 +36,66 @@ export function summarizeByMonth(transactions: Transaction[]): MonthSummary[] {
   return [...map.values()].sort((a, b) => a.key.localeCompare(b.key))
 }
 
+export interface PeriodSummary {
+  key: string
+  income: number
+  expense: number
+}
+
+function toISODate(d: Date): string {
+  const tz = d.getTimezoneOffset() * 60000
+  return new Date(d.getTime() - tz).toISOString().slice(0, 10)
+}
+
+/** Monday of the week containing `date`, at local midnight. */
+function startOfWeek(date: Date): Date {
+  const day = date.getDay()
+  const diff = (day === 0 ? -6 : 1) - day
+  const monday = new Date(date)
+  monday.setDate(date.getDate() + diff)
+  monday.setHours(0, 0, 0, 0)
+  return monday
+}
+
+/** Groups transactions into the last N weeks (Monday-start), ending with the current week. */
+export function summarizeByWeek(transactions: Transaction[], weeksBack = 8): PeriodSummary[] {
+  const currentWeekStart = startOfWeek(new Date())
+  const weeks: PeriodSummary[] = []
+  for (let i = weeksBack - 1; i >= 0; i--) {
+    const d = new Date(currentWeekStart)
+    d.setDate(d.getDate() - i * 7)
+    weeks.push({ key: toISODate(d), income: 0, expense: 0 })
+  }
+  const byKey = new Map(weeks.map((w) => [w.key, w]))
+  for (const tx of transactions) {
+    const weekStart = toISODate(startOfWeek(new Date(`${tx.date}T00:00:00`)))
+    const bucket = byKey.get(weekStart)
+    if (!bucket) continue
+    if (tx.type === 'income') bucket.income += tx.amount
+    else bucket.expense += tx.amount
+  }
+  return weeks
+}
+
+/** Groups transactions into the last N calendar days, ending today. */
+export function summarizeByDay(transactions: Transaction[], daysBack = 14): PeriodSummary[] {
+  const today = new Date()
+  const days: PeriodSummary[] = []
+  for (let i = daysBack - 1; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    days.push({ key: toISODate(d), income: 0, expense: 0 })
+  }
+  const byKey = new Map(days.map((d) => [d.key, d]))
+  for (const tx of transactions) {
+    const bucket = byKey.get(tx.date)
+    if (!bucket) continue
+    if (tx.type === 'income') bucket.income += tx.amount
+    else bucket.expense += tx.amount
+  }
+  return days
+}
+
 /** Average monthly expense per category over the last N complete-or-partial months (excluding the current one when it has too little data is not handled here — caller decides). */
 export function averageMonthlyByCategory(transactions: Transaction[], monthsBack = 3): Record<string, number> {
   const months = summarizeByMonth(transactions).slice(-monthsBack)

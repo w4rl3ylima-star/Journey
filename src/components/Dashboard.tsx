@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Transaction, Goal } from '../lib/types'
-import { summarizeByMonth, projectForward, computeGoalProgress, monthOverMonthDelta } from '../lib/projections'
+import { summarizeByMonth, computeGoalProgress, monthOverMonthDelta } from '../lib/projections'
 import { currentMonthKey, addMonthsToKey } from '../lib/format'
 import { CategoryBarChart } from './CategoryBarChart'
 import { TrendChart } from './TrendChart'
@@ -10,9 +10,11 @@ interface DashboardProps {
   transactions: Transaction[]
   goals: Goal[]
   onViewGoals: () => void
+  onViewIncome: () => void
+  onViewExpense: () => void
 }
 
-export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) {
+export function Dashboard({ transactions, goals, onViewGoals, onViewIncome, onViewExpense }: DashboardProps) {
   const { t, formatMonthLabel } = useSettings()
   const months = useMemo(() => summarizeByMonth(transactions), [transactions])
   const earliestKey = months[0]?.key ?? currentMonthKey()
@@ -27,8 +29,6 @@ export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) 
   }
   const previous = months.find((m) => m.key === addMonthsToKey(selectedKey, -1))
 
-  const projected = useMemo(() => projectForward(transactions, 3), [transactions])
-  const history = months.slice(-6)
   const goalProgress = useMemo(() => computeGoalProgress(goals, transactions), [goals, transactions])
   const topGoals = goalProgress.filter((g) => g.goal.currentAmount < g.goal.targetAmount).slice(0, 2)
 
@@ -79,13 +79,22 @@ export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) 
         <BalanceValue value={selected.net} />
 
         <div className="mt-5 flex gap-3">
-          <MiniStat label={t('dashboard.income', 'Receita')} value={selected.income} delta={incomeDelta} dotClassName="bg-emerald-400" />
+          <MiniStat
+            label={t('dashboard.income', 'Receita')}
+            value={selected.income}
+            delta={incomeDelta}
+            dotClassName="bg-emerald-400"
+            onClick={onViewIncome}
+            hint={t('dashboard.viewIncomeHint', 'Toque para ver os lançamentos')}
+          />
           <MiniStat
             label={t('dashboard.expense', 'Despesa')}
             value={selected.expense}
             delta={expenseDelta}
             dotClassName="bg-rose-400"
             invertDeltaTone
+            onClick={onViewExpense}
+            hint={t('dashboard.viewExpenseHint', 'Toque para ver os lançamentos')}
           />
         </div>
       </section>
@@ -98,18 +107,7 @@ export function Dashboard({ transactions, goals, onViewGoals }: DashboardProps) 
       </section>
 
       <section className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-black/5 dark:bg-[#141413] dark:ring-white/5">
-        <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
-            {t('dashboard.trend', 'Receita x Despesa')}
-          </h2>
-          <span className="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-medium text-neutral-500 dark:bg-white/5 dark:text-neutral-400">
-            {t('dashboard.trend.projected', '+ projeção')}
-          </span>
-        </div>
-        <p className="mb-2 text-xs text-neutral-400">
-          {t('dashboard.trend.caption', 'Últimos meses e os próximos 3, projetados pela sua média recente.')}
-        </p>
-        <TrendChart history={history} projected={projected} />
+        <TrendChart transactions={transactions} />
       </section>
 
       {topGoals.length > 0 && (
@@ -168,22 +166,31 @@ function MiniStat({
   delta,
   dotClassName,
   invertDeltaTone = false,
+  onClick,
+  hint,
 }: {
   label: string
   value: number
   delta: number | null
   dotClassName: string
   invertDeltaTone?: boolean
+  onClick: () => void
+  hint: string
 }) {
   const { formatCurrency } = useSettings()
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-1.5 rounded-2xl bg-white/10 px-3 py-2.5">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={hint}
+      className="flex min-w-0 flex-1 flex-col gap-1.5 rounded-2xl bg-white/10 px-3 py-2.5 text-left transition-transform active:scale-[0.97]"
+    >
       <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-white/60">
         <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dotClassName}`} />
         {label}
       </span>
       <span className="truncate text-base font-bold tabular-nums">{formatCurrency(value)}</span>
       <DeltaBadge value={delta} invertTone={invertDeltaTone} />
-    </div>
+    </button>
   )
 }

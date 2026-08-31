@@ -9,12 +9,20 @@ import { TopBar } from './components/TopBar'
 import { SettingsSheet } from './components/SettingsSheet'
 import type { Transaction } from './lib/types'
 
+type TransactionFilter = 'all' | 'expense' | 'income'
+
 function App() {
   const { transactions, goals, addTransaction, updateTransaction, removeTransaction, addGoal, updateGoal, removeGoal } =
     useAppData()
   const [view, setView] = useState<View>('dashboard')
+  const [transactionsFilter, setTransactionsFilter] = useState<TransactionFilter>('all')
   const [addTarget, setAddTarget] = useState<'new' | Transaction | null>(null)
   const [showSettings, setShowSettings] = useState(false)
+
+  const goToTransactions = (filter: TransactionFilter) => {
+    setTransactionsFilter(filter)
+    setView('transactions')
+  }
 
   return (
     <>
@@ -22,10 +30,21 @@ function App() {
 
       <main className="no-scrollbar flex-1 overflow-y-auto pb-4">
         {view === 'dashboard' && (
-          <Dashboard transactions={transactions} goals={goals} onViewGoals={() => setView('goals')} />
+          <Dashboard
+            transactions={transactions}
+            goals={goals}
+            onViewGoals={() => setView('goals')}
+            onViewIncome={() => goToTransactions('income')}
+            onViewExpense={() => goToTransactions('expense')}
+          />
         )}
         {view === 'transactions' && (
-          <TransactionsList transactions={transactions} onEdit={(tx) => setAddTarget(tx)} onRemove={removeTransaction} />
+          <TransactionsList
+            transactions={transactions}
+            initialFilter={transactionsFilter}
+            onEdit={(tx) => setAddTarget(tx)}
+            onRemove={removeTransaction}
+          />
         )}
         {view === 'goals' && (
           <GoalsView
@@ -38,7 +57,14 @@ function App() {
         )}
       </main>
 
-      <BottomNav active={view} onNavigate={setView} onAdd={() => setAddTarget('new')} />
+      <BottomNav
+        active={view}
+        onNavigate={(v) => {
+          if (v === 'transactions') setTransactionsFilter('all')
+          setView(v)
+        }}
+        onAdd={() => setAddTarget('new')}
+      />
 
       {addTarget && (
         <AddSheet
