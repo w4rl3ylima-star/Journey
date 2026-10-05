@@ -7,6 +7,7 @@ import { GoalsView } from './components/GoalsView'
 import { AddSheet } from './components/AddSheet'
 import { TopBar } from './components/TopBar'
 import { SettingsSheet } from './components/SettingsSheet'
+import { WordSearchGame } from './components/WordSearchGame'
 import type { Transaction } from './lib/types'
 
 type TransactionFilter = 'all' | 'expense' | 'income'
@@ -18,6 +19,7 @@ function App() {
   const [transactionsFilter, setTransactionsFilter] = useState<TransactionFilter>('all')
   const [addTarget, setAddTarget] = useState<'new' | Transaction | null>(null)
   const [showSettings, setShowSettings] = useState(false)
+  const [showGame, setShowGame] = useState(false)
 
   const goToTransactions = (filter: TransactionFilter) => {
     setTransactionsFilter(filter)
@@ -26,7 +28,7 @@ function App() {
 
   return (
     <>
-      <TopBar onOpenSettings={() => setShowSettings(true)} />
+      <TopBar onOpenSettings={() => setShowSettings(true)} onOpenGame={() => setShowGame(true)} />
 
       <main className="no-scrollbar flex-1 overflow-y-auto pb-4">
         {view === 'dashboard' && (
@@ -82,6 +84,7 @@ function App() {
       )}
 
       {showSettings && <SettingsSheet onClose={() => setShowSettings(false)} />}
+      {showGame && <WordSearchGame onClose={() => setShowGame(false)} />}
     </>
   )
 }
