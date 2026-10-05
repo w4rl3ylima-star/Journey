@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="color-scheme" content="light" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Caça-Palavras" />
+    <meta name="description" content="Caça-palavras em português com 4 telas, do fácil ao difícil." />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <title>Caça-Palavras</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --ink: #000000;
+        --muted: #555555;
+        --green: #86efac;
+        --green-soft: #dcfce7;
+        --purple: #a855f7;
+        --purple-light: #d8b4fe;
+        --blue: #3b82f6;
+        --blue-light: #93c5fd;
+        color-scheme: light;
+      }
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        overscroll-behavior: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        max-width: 560px;
+        margin: 0 auto;
+        padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 16px);
+        height: 100dvh;
+        overflow: hidden;
+      }
+      header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 900;
+      }
+      #progress {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      #levels {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin-top: 12px;
+      }
+      #levels button {
+        border: 2px solid var(--purple);
+        background: var(--bg);
+        color: var(--ink);
+        border-radius: 12px;
+        padding: 6px 2px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.15;
+      }
+      #levels button.active {
+        background: var(--purple);
+        color: #ffffff;
+      }
+      #board {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 12px;
+      }
+      #grid {
+        display: grid;
+        border: 3px solid var(--blue);
+        border-radius: 16px;
+        overflow: hidden;
+        touch-action: none;
+        background: var(--bg);
+      }
+      .cell {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        color: var(--ink);
+        transition: background-color 0.12s;
+      }
+      .cell.found-0 {
+        background: var(--green);
+      }
+      .cell.found-1 {
+        background: var(--purple-light);
+      }
+      .cell.selected {
+        background: var(--blue-light);
+      }
+      .cell.pop {
+        animation: pop 0.35s ease-out;
+      }
+      @keyframes pop {
+        50% {
+          transform: scale(1.25);
+        }
+      }
+      #words {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+        margin: 12px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      #words li {
+        border: 2px solid var(--blue);
+        border-radius: 999px;
+        padding: 3px 11px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      #words li.found-0,
+      #words li.found-1 {
+        text-decoration: line-through;
+      }
+      #words li.found-0 {
+        background: var(--green);
+        border-color: var(--green);
+      }
+      #words li.found-1 {
+        background: var(--purple-light);
+        border-color: var(--purple-light);
+      }
+      #hint {
+        margin: 10px 0 0;
+        text-align: center;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      #done {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.85);
+      }
+      #done.show {
+        display: flex;
+      }
+      #done .card {
+        width: 100%;
+        max-width: 340px;
+        background: var(--green-soft);
+        border: 3px solid var(--green);
+        border-radius: 24px;
+        padding: 24px;
+        text-align: center;
+        animation: pop 0.4s ease-out;
+      }
+      #done p {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 900;
+      }
+      #done small {
+        display: block;
+        margin-top: 6px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      #done button {
+        margin-top: 18px;
+        width: 100%;
+        border: 0;
+        border-radius: 16px;
+        padding: 14px;
+        background: var(--blue);
+        color: #ffffff;
+        font: inherit;
+        font-size: 17px;
+        font-weight: 800;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🔤 Caça-Palavras</h1>
+      <span id="progress"></span>
+    </header>
+
+    <nav id="levels"></nav>
+
+    <div id="board"><div id="grid"></div></div>
+
+    <ul id="words"></ul>
+    <p id="hint">Arraste o dedo sobre as letras — ou toque na primeira e depois na última letra.</p>
+
+    <div id="done" role="dialog" aria-modal="true">
+      <div class="card">
+        <p id="done-title"></p>
+        <small id="done-text"></small>
+        <button id="done-button" type="button"></button>
+      </div>
+    </div>
+
+    <script>
+      'use strict'
+
+      const RIGHT = [0, 1], DOWN = [1, 0], DIAG_DOWN = [1, 1], DIAG_UP = [-1, 1]
+      const LEFT = [0, -1], UP = [-1, 0], DIAG_DOWN_BACK = [1, -1], DIAG_UP_BACK = [-1, -1]
+
+      // Four screens, from easy (small grid, only → and ↓) to hard (big grid, all 8 directions).
+      const LEVELS = [
+        { name: 'Fácil', size: 6, directions: [RIGHT, DOWN], words: ['GATO', 'CASA', 'SOL', 'MAR', 'BOLA'] },
+        {
+          name: 'Médio',
+          size: 8,
+          directions: [RIGHT, DOWN, DIAG_DOWN],
+          words: ['ESCOLA', 'JANELA', 'BANANA', 'LIVRO', 'PRAIA', 'FLOR'],
+        },
+        {
+          name: 'Difícil',
+          size: 10,
+          directions: [RIGHT, DOWN, DIAG_DOWN, DIAG_UP, LEFT, UP],
+          words: ['GIRASSOL', 'CHOCOLATE', 'MONTANHA', 'CACHORRO', 'ESTRELA', 'ABACAXI', 'NUVEM'],
+        },
+        {
+          name: 'Muito difícil',
+          size: 12,
+          directions: [RIGHT, DOWN, DIAG_DOWN, DIAG_UP, LEFT, UP, DIAG_DOWN_BACK, DIAG_UP_BACK],
+          words: ['COMPUTADOR', 'BIBLIOTECA', 'FELICIDADE', 'DINOSSAURO', 'PRIMAVERA', 'ELEFANTE', 'AVENTURA', 'TARTARUGA'],
+        },
+      ]
+
+      // Weighted toward common Portuguese letters so the filler blends in with the hidden words.
+      const FILLER = 'AAAAEEEEIIOOOUUSSRRNNDDMMTTCCLLPPVGBFHQJXZ'
+      const STORAGE_KEY = 'caca-palavras.state.v1'
+
+      const randomInt = (max) => Math.floor(Math.random() * max)
+
+      function tryBuild(level) {
+        const { size, directions } = level
+        const grid = Array.from({ length: size }, () => Array(size).fill(''))
+        const placements = []
+        // Longest words first: they're the hardest to fit.
+        const words = [...level.words].sort((a, b) => b.length - a.length)
+        for (const word of words) {
+          let placed = false
+          for (let attempt = 0; attempt < 200 && !placed; attempt++) {
+            const [dr, dc] = directions[randomInt(directions.length)]
+            const row = randomInt(size)
+            const col = randomInt(size)
+            const endRow = row + dr * (word.length - 1)
+            const endCol = col + dc * (word.length - 1)
+            if (endRow < 0 || endRow >= size || endCol < 0 || endCol >= size) continue
+            const cells = []
+            let fits = true
+            for (let i = 0; i < word.length; i++) {
+              const r = row + dr * i
+              const c = col + dc * i
+              if (grid[r][c] && grid[r][c] !== word[i]) {
+                fits = false
+                break
+              }
+              cells.push([r, c])
+            }
+            if (!fits) continue
+            cells.forEach(([r, c], i) => (grid[r][c] = word[i]))
+            placements.push({ word, cells })
+            placed = true
+          }
+          if (!placed) return null
+        }
+        for (const row of grid) {
+          for (let c = 0; c < size; c++) if (!row[c]) row[c] = FILLER[randomInt(FILLER.length)]
+        }
+        // Show the word list in the level's original order.
+        placements.sort((a, b) => level.words.indexOf(a.word) - level.words.indexOf(b.word))
+        return { grid, placements }
+      }
+
+      function buildPuzzle(level) {
+        for (;;) {
+          const puzzle = tryBuild(level)
+          if (puzzle) return puzzle
+        }
+      }
+
+      /** Cells on the straight line (row, column or diagonal) from start to end, or null if not aligned. */
+      function lineBetween(start, end) {
+        const dr = end[0] - start[0]
+        const dc = end[1] - start[1]
+        if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) return null
+        const steps = Math.max(Math.abs(dr), Math.abs(dc))
+        const sr = Math.sign(dr)
+        const sc = Math.sign(dc)
+        return Array.from({ length: steps + 1 }, (_, i) => [start[0] + sr * i, start[1] + sc * i])
+      }
+
+      // ---- State (saved so the phone can close the app mid-game and resume) ----
+
+      let state = loadState()
+
+      function newState(levelIndex) {
+        return { levelIndex, puzzle: buildPuzzle(LEVELS[levelIndex]), found: {} }
+      }
+
+      function loadState() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY))
+          if (saved && LEVELS[saved.levelIndex] && saved.puzzle && saved.found) return saved
+        } catch {
+          // Corrupt or unavailable storage — start fresh.
+        }
+        return newState(0)
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+        } catch {
+          // Storage unavailable (private mode) — progress just won't persist.
+        }
+      }
+
+      // ---- Rendering ----
+
+      const gridEl = document.getElementById('grid')
+      const boardEl = document.getElementById('board')
+      const wordsEl = document.getElementById('words')
+      const levelsEl = document.getElementById('levels')
+      const progressEl = document.getElementById('progress')
+      const doneEl = document.getElementById('done')
+      let cellEls = []
+
+      LEVELS.forEach((level, i) => {
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.textContent = `${i + 1}. ${level.name}`
+        button.addEventListener('click', () => goToLevel(i))
+        levelsEl.appendChild(button)
+      })
+
+      function goToLevel(index) {
+        state = newState(index)
+        saveState()
+        resetSelection()
+        renderLevel()
+      }
+
+      function renderLevel() {
+        const { size } = LEVELS[state.levelIndex]
+        ;[...levelsEl.children].forEach((b, i) => b.classList.toggle('active', i === state.levelIndex))
+
+        gridEl.innerHTML = ''
+        gridEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`
+        cellEls = state.puzzle.grid.map((row) =>
+          row.map((letter) => {
+            const cell = document.createElement('div')
+            cell.className = 'cell'
+            cell.textContent = letter
+            gridEl.appendChild(cell)
+            return cell
+          }),
+        )
+
+        wordsEl.innerHTML = ''
+        for (const { word } of state.puzzle.placements) {
+          const li = document.createElement('li')
+          li.textContent = word
+          li.dataset.word = word
+          wordsEl.appendChild(li)
+        }
+
+        fitGrid()
+        renderMarks()
+      }
+
+      /** Size the grid as the largest square that fits the free space, so it works on any phone. */
+      function fitGrid() {
+        const { size } = LEVELS[state.levelIndex]
+        const side = Math.floor(Math.min(boardEl.clientWidth, boardEl.clientHeight))
+        const cell = Math.floor((side - 6) / size)
+        gridEl.style.width = gridEl.style.height = `${cell * size + 6}px`
+        gridEl.style.fontSize = `${Math.round(cell * 0.55)}px`
+      }
+
+      function renderMarks(popWord) {
+        const selectedKeys = new Set(selection().map(([r, c]) => `${r},${c}`))
+        const foundColor = new Map()
+        for (const p of state.puzzle.placements) {
+          const idx = state.found[p.word]
+          if (idx === undefined) continue
+          for (const [r, c] of p.cells) foundColor.set(`${r},${c}`, idx % 2)
+        }
+
+        cellEls.forEach((row, r) =>
+          row.forEach((el, c) => {
+            const k = `${r},${c}`
+            el.classList.toggle('selected', selectedKeys.has(k))
+            el.classList.toggle('found-0', foundColor.get(k) === 0)
+            el.classList.toggle('found-1', foundColor.get(k) === 1)
+          }),
+        )
+
+        if (popWord) {
+          const placement = state.puzzle.placements.find((p) => p.word === popWord)
+          placement.cells.forEach(([r, c], i) => {
+            const el = cellEls[r][c]
+            el.classList.remove('pop')
+            setTimeout(() => el.classList.add('pop'), i * 40)
+          })
+        }
+
+        for (const li of wordsEl.children) {
+          const idx = state.found[li.dataset.word]
+          li.classList.toggle('found-0', idx !== undefined && idx % 2 === 0)
+          li.classList.toggle('found-1', idx !== undefined && idx % 2 === 1)
+        }
+
+        const total = state.puzzle.placements.length
+        const count = Object.keys(state.found).length
+        progressEl.textContent = `${count} de ${total} palavras`
+        if (count === total) showDone()
+      }
+
+      function showDone() {
+        const isLast = state.levelIndex === LEVELS.length - 1
+        document.getElementById('done-title').textContent = isLast ? '🏆 Parabéns!' : '🎉 Tela completa!'
+        document.getElementById('done-text').textContent = isLast
+          ? 'Você completou todas as telas!'
+          : `Próxima: ${LEVELS[state.levelIndex + 1].name}`
+        document.getElementById('done-button').textContent = isLast ? 'Jogar desde o início' : 'Próxima tela'
+        setTimeout(() => doneEl.classList.add('show'), 500)
+      }
+
+      document.getElementById('done-button').addEventListener('click', () => {
+        doneEl.classList.remove('show')
+        goToLevel(state.levelIndex === LEVELS.length - 1 ? 0 : state.levelIndex + 1)
+      })
+
+      // ---- Selection: drag across letters, or tap the first letter and then the last ----
+
+      let start = null
+      let end = null
+      let tapAnchor = null
+      let dragging = false
+
+      function resetSelection() {
+        start = end = tapAnchor = null
+        dragging = false
+      }
+
+      function selection() {
+        if (!start) return []
+        return lineBetween(start, end || start) || [start]
+      }
+
+      function cellFromPoint(e) {
+        const rect = gridEl.getBoundingClientRect()
+        const { size } = LEVELS[state.levelIndex]
+        const col = Math.floor(((e.clientX - rect.left) / rect.width) * size)
+        const row = Math.floor(((e.clientY - rect.top) / rect.height) * size)
+        if (row < 0 || row >= size || col < 0 || col >= size) return null
+        return [row, col]
+      }
+
+      function checkSelection(cells) {
+        const letters = cells.map(([r, c]) => state.puzzle.grid[r][c]).join('')
+        const reversed = [...letters].reverse().join('')
+        const match = state.puzzle.placements.find(
+          (p) => state.found[p.word] === undefined && (p.word === letters || p.word === reversed),
+        )
+        if (!match) return null
+        state.found[match.word] = Object.keys(state.found).length
+        saveState()
+        navigator.vibrate?.(40)
+        return match.word
+      }
+
+      gridEl.addEventListener('pointerdown', (e) => {
+        const cell = cellFromPoint(e)
+        if (!cell) return
+        gridEl.setPointerCapture(e.pointerId)
+        dragging = true
+        start = tapAnchor || cell
+        end = cell
+        renderMarks()
+      })
+
+      gridEl.addEventListener('pointermove', (e) => {
+        if (!dragging) return
+        const cell = cellFromPoint(e)
+        if (!cell || (end && cell[0] === end[0] && cell[1] === end[1])) return
+        end = cell
+        renderMarks()
+      })
+
+      function finishSelection() {
+        if (!dragging || !start) return
+        dragging = false
+        const same = start[0] === end[0] && start[1] === end[1]
+        if (same && !tapAnchor) {
+          // First tap: keep the letter selected and wait for the last letter.
+          tapAnchor = start
+          return
+        }
+        const line = lineBetween(start, end)
+        const word = line && !same ? checkSelection(line) : null
+        resetSelection()
+        renderMarks(word)
+      }
+
+      gridEl.addEventListener('pointerup', finishSelection)
+      gridEl.addEventListener('pointercancel', finishSelection)
+      window.addEventListener('resize', fitGrid)
+
+      renderLevel()
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}))
+      }
+    </script>
+  </body>
+</html>

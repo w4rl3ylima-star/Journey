@@ -39,6 +39,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // The word-search game in public/caca-palavras/ is a separate PWA with its own service
+        // worker — keep Journey's worker from precaching it or answering its navigations.
+        globIgnores: ['caca-palavras/**'],
+        navigateFallbackDenylist: [/\/caca-palavras\//],
       },
     }),
   ],
