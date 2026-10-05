@@ -61,6 +61,21 @@ builda e publica a cada push nesta branch. Para ativar (uma vez só):
   categorias discricionárias (lazer, compras, assinaturas...) para chegar
   mais rápido.
 
+## Jogo: Caça-Palavras
+
+Um app separado, só com o jogo, em `public/caca-palavras/` (HTML + JS puro, sem
+build). Ele é publicado junto com o Journey e fica em
+`https://w4rl3ylima-star.github.io/Journey/caca-palavras/`.
+
+- 4 telas, do fácil (6×6, palavras só → e ↓) ao muito difícil (12×12, nas 8
+  direções, inclusive de trás pra frente). A grade é sorteada a cada partida.
+- Arraste o dedo sobre as letras ou toque na primeira e na última letra. A
+  seleção fica azul e cada palavra encontrada fica verde claro ou roxa.
+- O progresso fica salvo no aparelho. Instalável na tela inicial e funciona
+  offline, como o Journey.
+- Para mudar as palavras, edite a lista `LEVELS` em `index.html`. Se mudar
+  algum arquivo do jogo, aumente o `VERSION` em `sw.js`.
+
 ## Stack
 
 React + TypeScript + Vite, Tailwind CSS v4, Recharts, `vite-plugin-pwa`.

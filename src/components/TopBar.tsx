@@ -2,10 +2,9 @@ import { useSettings } from '../contexts/SettingsContext'
 
 interface TopBarProps {
   onOpenSettings: () => void
-  onOpenGame: () => void
 }
 
-export function TopBar({ onOpenSettings, onOpenGame }: TopBarProps) {
+export function TopBar({ onOpenSettings }: TopBarProps) {
   const { t } = useSettings()
 
   return (
@@ -16,24 +15,14 @@ export function TopBar({ onOpenSettings, onOpenGame }: TopBarProps) {
         </span>
         <span className="text-sm font-bold text-neutral-900 dark:text-white">{t('app.title', 'Journey')}</span>
       </div>
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={onOpenGame}
-          aria-label={t('wordsearch.title', 'Caça-Palavras')}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-lg text-neutral-500 transition-colors hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/10"
-        >
-          🎮
-        </button>
-        <button
-          type="button"
-          onClick={onOpenSettings}
-          aria-label={t('settings.title', 'Configurações')}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-lg text-neutral-500 transition-colors hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/10"
-        >
-          ⚙️
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={onOpenSettings}
+        aria-label={t('settings.title', 'Configurações')}
+        className="flex h-9 w-9 items-center justify-center rounded-full text-lg text-neutral-500 transition-colors hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/10"
+      >
+        ⚙️
+      </button>
     </header>
   )
 }
